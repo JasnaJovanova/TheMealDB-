@@ -1,11 +1,27 @@
 import 'package:dishrecipies/screens/home_screen.dart';
 import 'package:dishrecipies/screens/meals_by_category_screen.dart';
 import 'package:dishrecipies/screens/meal_detail_screen.dart';
+import 'package:dishrecipies/service/firebase_api.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+
+// // initialize Firebase
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase Core
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await FirebaseApi().initNotifications();
+
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -13,13 +29,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Dish Recipes App 223103',
+      title: 'Dish Recipes App-223182',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pinkAccent),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
       ),
       initialRoute: "/",
       routes: {
-        "/": (context) => const MyHomePage(title: 'Dish Recipes App 223103'),
+        "/": (context) => const MyHomePage(title: 'Dish Recipes App-223182'),
 
         // Meals inside a category
         "/mealsByCategory": (context) {

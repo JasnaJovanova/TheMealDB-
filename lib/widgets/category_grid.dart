@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/category_model.dart';
+import 'package:dishrecipies/models/category_model.dart';
 import 'category_card.dart';
 
 

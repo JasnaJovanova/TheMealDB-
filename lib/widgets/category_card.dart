@@ -1,6 +1,6 @@
 import 'package:dishrecipies/screens/meals_by_category_screen.dart';
 import 'package:flutter/material.dart';
-import '../models/category_model.dart';
+import 'package:dishrecipies/models/category_model.dart';
 
 class CategoryCard extends StatelessWidget {
   final Category category;

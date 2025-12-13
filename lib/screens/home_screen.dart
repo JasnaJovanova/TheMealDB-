@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/category_model.dart';
+import 'package:dishrecipies/models/category_model.dart';
 import '../service/api_service.dart';
 import '../widgets/category_grid.dart';
 import '../screens/meal_detail_screen.dart';
+import 'favorite_meals_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -14,8 +15,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late List<Category> _categories;
-  List<Category> _filteredCategories = [];
+  late List<Category> _categories;             // full list from API
+  List<Category> _filteredCategories = [];     // list shown in the grid
   bool _isLoading = true;
   final ApiService _api_service = ApiService();
 
@@ -33,6 +34,16 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  // navigation to fave meals screen
+  void _openFavoriteMealsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FavoriteMealsScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,11 +52,22 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         actions: [
           TextButton.icon(
+            onPressed: _openFavoriteMealsScreen,
+            icon: const Icon(
+              Icons.favorite,
+              color: Colors.black26,
+            ),
+            label: const Text(
+              'Favorites',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ),
+          TextButton.icon(
             onPressed: _openRandomRecipe,
-            icon: const Icon(Icons.shuffle, color: Colors.black54),
+            icon: const Icon(Icons.shuffle, color: Colors.brown),
             label: const Text(
               'Choose random recipe',
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: Colors.brown),
             ),
           )
         ],
@@ -85,11 +107,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     setState(() {
       _categories = categoryList;
-      _filteredCategories = categoryList;
+      _filteredCategories = categoryList; // initially show all
       _isLoading = false;
     });
   }
 
+  // FILTER LOCALLY BY CATEGORY NAME
   void _onSearchChanged(String query) {
     final lowerQuery = query.toLowerCase();
 
@@ -104,7 +127,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // RANDOM RECIPE HANDLER
   Future<void> _openRandomRecipe() async {
+    // Small loading dialog while fetching
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -114,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final id = await _api_service.getRandomMealId();
 
     if (mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // close the dialog
     }
 
     if (id == null) {

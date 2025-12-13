@@ -1,7 +1,9 @@
-import 'package:dishrecipies/screens/meal_detail_screen.dart';
 import 'package:flutter/material.dart';
-import '../models/meal.dart';
+import 'package:dishrecipies/models/meal.dart';
 import '../service/api_service.dart';
+import '../screens/favorite_meals_screen.dart';
+import '../widgets/favorites_manager.dart';
+import '../widgets/meal_grid.dart'; // Assuming you create this screen
 
 class MealsByCategoryScreen extends StatefulWidget {
   final String category;
@@ -27,13 +29,19 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
   void initState() {
     super.initState();
     _loadMealsForCategory();
+    // Listen to changes in the global favorites state to refresh the heart icons
+    favoritesManager.addListener(_refreshState);
   }
 
   @override
   void dispose() {
+    favoritesManager.removeListener(_refreshState);
     _searchController.dispose();
     super.dispose();
   }
+
+  // Forces a rebuild of the widget when the favorites list changes
+  void _refreshState() => setState(() {});
 
   Future<void> _loadMealsForCategory() async {
     final meals = await _apiService.loadMealsByCategory(widget.category);
@@ -61,6 +69,7 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
 
     final results = await _apiService.searchMealsByName(q);
 
+    // keep only meals that belong to this category
     final filtered = results.where((m) {
       final cat = m.strCategory?.toLowerCase();
       return cat == widget.category.toLowerCase();
@@ -77,6 +86,18 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.category),
+        actions: [
+          // Button to navigate to the favorite meals screen
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoriteMealsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -84,7 +105,7 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            //search bar
+            // search bar
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -102,62 +123,12 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
 
             const SizedBox(height: 8),
 
+            // grid with meals
             Expanded(
-              child: GridView.builder(
-                itemCount: _visibleMeals.length,
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.8,
-                ),
-                itemBuilder: (context, index) {
-                  final meal = _visibleMeals[index];
-
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => MealDetailScreen(idMeal: meal.idMeal)));
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: const BorderSide(
-                          color: Colors.pink,
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(10),
-                              ),
-                              child: Image.network(
-                                meal.strMealThumb,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              meal.strMeal,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+              child: MealGrid(
+                meals: _visibleMeals,
+                favoriteMealIds: favoritesManager.favoriteMealIds,
+                onToggleFavorite: favoritesManager.toggleFavorite,
               ),
             ),
           ],
